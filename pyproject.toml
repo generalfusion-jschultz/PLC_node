@@ -1,11 +1,11 @@
 [project]
-name = "project_or_module_name"
+name = "plc_node"
 description = "A_short_description"
 
 # If a project, then you can specify version here
 # version = "0.0.0"
 # If a module, then fetch version dynamically (see [tool.setuptools.dynamic] below)
-# dynamic = ["version"]
+dynamic = ["version"]
 
 readme = "README.md"
 requires-python = ">=3.10"
@@ -21,10 +21,11 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
 ]
 
-# dependencies = [
-#    "numpy",
-#    "my_module @ git+https://github.com/my_github/my_repo.git@tag", 
-# ]
+dependencies = [
+   "mqtt-node-network @ git+https://github.com/davidson-engineering/mqtt-node-network.git",
+   "pyads",
+   "paho-mqtt"
+]
 
 # If a module, then use fetch version from src/module_name/__init__.py
 # [tool.setuptools.dynamic]
