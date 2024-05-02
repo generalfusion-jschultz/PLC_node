@@ -1,6 +1,6 @@
 [project]
 name = "plc_node"
-description = "A_short_description"
+description = "Connects to a Beckhoff PLC using pyads and publishes data through MQTT"
 
 # If a project, then you can specify version here
 # version = "0.0.0"
@@ -11,8 +11,8 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = {file = "LICENSE"}
 authors = [
-  {email = "matthew.davidson@generalfusion.com"},
-  {name = "Matthew Davidson"}
+  {email = "jason.schultz@generalfusion.com"},
+  {name = "Jason Schultz"}
 ]
 
 classifiers = [

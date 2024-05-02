@@ -15,7 +15,7 @@ config, logger = initialize(
     config="config/config.toml", secrets=".env", logger="config/logger.yaml"
 )
 BROKER_CONFIG = config["mqtt"]["broker"]
-PUBLISH_PERIOD = 1
+PUBLISH_PERIOD = 2
 
 def main():
     plc = PlcNode(
@@ -23,12 +23,15 @@ def main():
         name = "plc",
         node_id = "plc_node_0"
     )
-    plc.connect()
-
+    t = 0.0
     with plc:
         while True:
+            plc.write_data_to_plc("MAIN.tc2", t)
+            print(f"{t} written to PLC variable 'MAIN.tc2'.")
+            t += 0.25
             plc.publish()
-            print(plc.get_data())
+            # logger.info(f"{plc.get_data()}")
+            print(f"{plc.get_data()}")
             time.sleep(PUBLISH_PERIOD)
 
 

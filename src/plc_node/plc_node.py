@@ -40,7 +40,7 @@ def get_ip() -> str:
     return IP
 
 
-def connect_to_plc(client_ip:str) -> None:
+def connect_to_plc(client_ip: str) -> None:
     client_ams_net_id: str = client_ip + ".1.1"
     pyads.set_local_address(client_ams_net_id)  # Sender AMS is Linux IP + 1.1
     route_flag: bool = pyads.add_route_to_plc(
@@ -77,7 +77,7 @@ class PlcNode (MQTTNode):
         pyads.open_port()
         self.plc = pyads.Connection(PLC_AMS_NET_ID, PLC_PORT, PLC_IP)
         
-        attempt:int = 0
+        attempt: int = 0
         plc_state = None
         while (attempt < self.reconnect_attempts) and (plc_state is None):
             try:
@@ -86,7 +86,7 @@ class PlcNode (MQTTNode):
                 print(f"{e}")
                 time.sleep(self.timeout)
                 attempt += 1
-                pass
+                continue
 
             try:
                 plc_state = self.plc.read_state()
@@ -100,6 +100,7 @@ class PlcNode (MQTTNode):
 
 
     def __enter__(self) -> None:
+        MQTTNode.connect(self)
         self.plc.open()
 
     
@@ -107,11 +108,23 @@ class PlcNode (MQTTNode):
         self.plc.close()        
 
 
+    def write_data_to_plc(self, plc_variable_name: str, value: float) -> None:
+        # Look at getting access to the handle to increase performance:
+        #   https://pyads.readthedocs.io/en/latest/documentation/connection.html#read-and-write-by-name
+        try:
+            self.plc.write_by_name(plc_variable_name, value)
+        except pyads.ADSError:
+            logger.warning(f"{plc_variable_name} does not exist. Check if PLC variable name is correct.")
+
+
     def get_data(self) -> dict[str, float]:
         data: dict[str, float] = {}
         for (plc_variable_name, published_variable_name) in PLC_VAR.items():
-            # CHECK IF VARIABLE NAME EXISTS
-            value: float = self.plc.read_by_name(plc_variable_name)
+            try:
+                value: float = self.plc.read_by_name(plc_variable_name)
+            except pyads.ADSError:
+                logger.warning(f"{plc_variable_name} does not exist. Check if PLC variable name is correct.")
+                continue
             if isinstance(value, float):
                 data.update({published_variable_name: value})
         return data
@@ -125,16 +138,18 @@ class PlcNode (MQTTNode):
                 return self.get_data()
     
 
-    def publish(self, debug: bool = False) -> tuple[str, float]:
+    def publish(self, debug: bool = False) -> None | tuple[str, float]:
         data: dict[str, float] = self.process_data()
         if data: # data is not empty
             for (datum, value) in data.items():
+                # Maybe move some of the topic parameters into a struct on PLC side if expanding to multiple sensors types on single PLC
                 topic: str = f"testing/{self.node_id}/temperature/{datum}"
                 payload: float = value
                 MQTTNode.publish(
                     self,
                     topic = topic,
-                    payload = payload
+                    payload = payload,
+                    retain = True
                 )
         if debug:
             if data:

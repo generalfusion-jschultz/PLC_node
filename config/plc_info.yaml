@@ -1,7 +1,7 @@
 plc:
   name: "CX9020"
   node_id: 0
-  ip_address: "10.10.31.49"
+  ip_address: "10.10.32.24"
   ams_net_id: "5.109.60.19.1.1"
   plc_port: 851
   var_names: 
